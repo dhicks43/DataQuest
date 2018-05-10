@@ -1,0 +1,97 @@
+~~Creating Tables
+#psycopg2 functions
+.connect("dbname=foo user=bar password=baz") -- opens up a connection with a postgres database
+.commit() -- commits any cursor queries made by a cursour to the database
+
+#cursor functions
+.execute(command) [] -- allows you to execute a SQL command
+.description -- returns a tuple of table data
+	ex: Column(name='id', type_code=20, display_size=None, internal_size=8, precision=None, scale=None, null_ok=None)
+
+#postresql functions (SQL codes)
+SELECT * -- selects an amount of queried objects
+FROM * -- chooses a table
+LIMIT * -- limits the amount of rows a request returns
+
+#postgres notes
+postgres is funny about datatypes. Be sure to check length of strings, numbers, etc.
+
+
+ints have smallint, integer, and bigint
+Decimal examples: 
+# DECIMAL(3, 2)
+[1.23, 4.59, 10.2, 100]
+
+# DECIMAL(2, 2)
+[1.2, 40, 0.2]
+
+# DECIMAL(5, 1)
+[100.0, 63.1, 4000.1, 55555]
+
+
+string-likes 
+>character varying(n)(varchar(n)) -- variable length with limit
+>character(n)(char(n)) -- fixed length and blank padded 
+>text -- variable unlimited length
+
+~example:
+# Storing "black"
+# with CHAR(20)
+black                # padded with 15 extra whitespace characters
+# with VARCHAR(20)
+black # not padded
+
+***Use TEXT for uncertain sizes and VARCHAR(N) for fixed sizes***
+
+BOOLEANs are nice and take 1 byte each
+There's a TIMESTAMP datatype
+
+
+~~Modifying Tables
+To change a table, use the ALTER TABLE command
+To modify a column, use ALTER COLUMN
+
+#Alterations
+>RENAME TO -- renames a table
+>DROP COLUMN -- drops a column
+>column_name TYPE desired_type -- allows you to change a column's data type
+	Can't change chars to ints or weird stuff like that
+>ADD COLUMN -- allows you to create a new column, defaults to NULL (can set a default value by adding it after declaring type)
+	-- Default each entry to Jan 1st, 1991.
+	ALTER TABLE ign_reviews ADD COLUMN release_date DATE DEFAULT 01-01-1991
+>UPDATE -- allows you to set the values in a given column
+
+#Postgres Symbols
+> || -- concatination 
+
+~~Loading and Dextracting Data with Tables
+"Prepared Statements" work better than variable replacements
+You can efficiently load data into a table using the "mogrify()" function and can be used with the cursor object
+You can "intelligently" load a CSV into a database with the "copy_expert" method using the STDIN
+	ex:
+	import psycopg2
+	conn = psycopg2.connect("dbname=dq user=dq")
+	cur = conn.cursor()
+
+	with open('example.csv', 'r') as f:
+    	cur.copy_expert('COPY example_table FROM STDIN CSV', f)
+
+	conn.commit()
+
+copy_expert is the fastest of all inserts
+you can do table manipulations in python, but for tables with + 1m lines, it's easier to just use SQL
+
+~~User and Database Management
+the psycopg2.connect() function takes three values: dbname (database name), user (username), and password
+	ex: conn = psycopg2.connect(dbname="dq", user="postgres", password="password")
+You create a new user with the >CREATE USER function in sql.
+	Read more: https://www.postgresql.org/docs/9.5/static/sql-createuser.html
+User privs is the second thing to worry about with security
+	>SELECT, INSERT, DELETE, and DROP TABLE are examples of user commands
+	Read more: https://www.postgresql.org/docs/9.1/static/ddl-priv.html
+Command access can also be revoked with the >REVOKE command
+The opposite of REVOKE is GRANT
+	Read more: https://www.postgresql.org/docs/9.1/static/sql-grant.html
+
+Instead of manually changing user privs, you can create a user group and add users to them
+You create a group then add a user to it

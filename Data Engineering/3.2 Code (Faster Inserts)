@@ -1,0 +1,35 @@
+# The `cur` object is provided for you.
+conn = psycopg2.connect("dbname=dq user=dq")
+cur = conn.cursor()
+
+import csv
+
+with open('ign.csv','r') as f:
+    next(f)
+    reader = csv.reader(f)
+    mogrified_values = ""
+    for line in reader:
+        mogrified_values += cur.mogrify("(%s, %s, %s, %s, %s, %s, %s, %s, %s)", line).decode('utf-8') + ', '
+    mogrified_values = mogrified_values[:-2]
+                                     
+cur.execute('INSERT INTO ign_reviews VALUES' + mogrified_values)
+conn.commit()
+
+vs 
+
+
+conn = psycopg2.connect("dbname=dq user=dq")
+cur = conn.cursor()
+conn = psycopg2.connect("dbname=dq user=dq")
+cur = conn.cursor()
+with open('ign.csv', 'r') as f:
+    next(f)
+    reader = csv.reader(f)
+    mogrified = [ 
+        cur.mogrify("(%s, %s, %s, %s, %s, %s, %s, %s, %s)", row).decode('utf-8')
+        for row in reader
+    ] 
+
+mogrified_values = ",".join(mogrified) 
+cur.execute('INSERT INTO ign_reviews VALUES ' + mogrified_values)
+conn.commit()

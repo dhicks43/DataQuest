@@ -1,0 +1,80 @@
+Recently, the International Hurricane Watchgroup (IHW) has been asked to update their analysis tools. Because of the increase in public awareness of hurricanes, they are required to be more diligient with the analysis of historical hurricane data they share across the organization. They have asked you, someone with experience in databases, to help work with their team to productionize their services.
+
+Accepting the job, their team tells you that they have been having trouble sharing data across the teams and keeping it consistent. From what they've told you, it seems that their method of sharing the data with their data anaylsts has been to save a CSV file on their local servers and have every data analyst pull the data down. Then, each analyst uses a local SQLite engine to store the CSV, run their queries, and send their results around.
+
+From what they have told you, you might be thinking that this is an inefficient way of sharing data. To understand what you will be working on, they have sent you a CSV file. Their CSV file contains the following fields:
+
+* fid - ID for the row
+* year - Recorded year
+* month - Recorded month
+* day - Recorded date
+* ad_time - Recorded time in UTC
+* btid - Hurricane ID
+* name - Name of the hurricane
+* lat - Latitude of the recorded location
+* long - Longitude of the recorded location
+* wind_kts - Wind speed in knots per second
+* pressure - Atmospheric pressure of the hurricane
+* cat - Hurricane category
+* basin - The basin the hurricane is located
+* shape_leng - Hurricane shape length
+
+In this Guided Project, you will be using the local installed version of Postgres you installed from the previous project. This is much different than previous Guided Projects as you will be using your own notebook and your own Python environment instead of Dataquest's. Your job is to show that you can create a database that will accomplish the following requirements:
+
+* Database for the IHW to store their tables.
+* Table that contains the fields detailed in the CSV file
+* User that can update, read, and insert into a table of the data.
+* Insert the data into the table.
+In the next screen, the IHW has given you a sample file to work with. So, let's get started!
+
+There are two ways you can work with the CSV file in this project. The first, is that you can download the file from this link. Otherwise, you can use Python to programmatically download the file and read it like any other file. This is possible using the Python standard library, urllib.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	import io
+	from urllib import request
+​
+	response = request.urlopen('https://www.example.com/some_file.csv')
+	reader = csv.reader(io.TextIOWrapper(response))
+​
+	for line in reader:
+    	print(line)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The urlopen() method is part of the request module in the urllib library. It opens up the webpage requested and creates an HTML response object. Before we can use the response object as a file, we need to use another module, io.
+
+We use the io module to fake a file descriptor by using the TextIOWrapper() method. This wraps any string-like object and forces it to act like a Python file descriptor. You can choose to open the file locally or use the urlopen() in your own project but we will assume you are using the urlopen().
+
+Now that you have downloaded the file, it's time to take a look at the data entries. Here's a snippet of the CSV file for you:
+
+~~Code Snippet~~
+
+Within this file, you may see that there are a bunch of different datatypes for each of the defined columns. Many of these types we have encountered before like the integers, strings, and numeric types. In this screen, we want to point out a couple of the types that will help you in your analysis.
+
+In the FID column, we see that the numbers vary between 2001 and on. From first observation, it already exceeds the small integer type. If we were to guess, this column fits within the INTEGER size.
+
+Furthermore, the last column, shape length, seems to keep the same precision of 1 digit before the decimal and 6 digits after. Recall that a datatype which uses precision is the DECIMAL type. Using DECIMAL, we can specify a max scale and precision that will ensure the data stays within the ranges.
+
+In this screen, we will focus on creating the table for the CSV file. We will leave it up to you to decide how to approach the string types, but we want to illuminate one specific column before you begin. Take a look at the AD_TIME column.
+
+This column seems odd at first as there is a sequence of 4 digits followed by a Z. This seems to be like an integer but cannot be converted as one. From the description, however, we know that this column is a record of the time in UTC (Coordinated Universal Time).
+
+Given this description, we can extrapolote that this column contains the hour (first 2 digits) and the minute (last 2 digits) of the recorded hurricane's time. Using the year, month, day, columns, this gives us an accurate representation of the hurricane's recorded datetime.
+
+This is more precise than just the DATE type that we used for the date columns in this course. You can find the date-like types in the documentation here. We leave it up to you to decide which type is appropriate for this data
+
+With a table set up, it's now time to create a user on the Postgres database that can insert, update, and read the data but not delete. This is to make sure that someone who might get a hold of this user does not issue a destructive command. Essentially, this is like creating a "data production" user whose job it is is to always write new and existing data to the table.
+
+Futhermore, even though it wasn't according to the spec, we know that the IHW team's analysts just run read queries on the data. Also, since the analysts only know SQLite queries, they may not be well-versed in a production database. As such, it might be risky handing out a general production user for them to query their data.
+
+From what you have learned about security and restricting well meaning users, it might be a good idea to restrict those analysts from some commands. Those commands can be anything from adding new data to the table or changing the values. You should decide what commands should be given to the analyst user.
+
+With your users completed, it's time to do the final task: insert the data into the table! There are plenty of commands that we have introduced in this course that will let you accomplish this goal. As a reminder, you can use COPY, INSERT, or the copy_*() methods in the psycopg2 package.
+
+Congratuations on creating your own table, user, and database in Postgres! Following these steps is just the beginning, there is a lot more you can do with the Postgres table. Here's just a small list of features you can add:
+
+A readonly group instead of just one readonly user.
+Try downloading the following file that contains a new dataset that is slightly different.
+See if you can insert it in your created table.
+Launch your Postgres instance! Right now only you have access to your data on your local machine. To share it, you need to use something like a cloud-storage solution.
+Launch Postgres on AWS
+Launch Postgres with Heroku

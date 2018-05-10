@@ -1,0 +1,33 @@
+conn = psycopg2.connect("dbname=dq user=dq")
+cur = conn.cursor()
+# Add your field here.
+cur.execute('DROP TABLE ign_reviews')
+cur.execute("""
+    CREATE TABLE ign_reviews (
+        id BIGINT PRIMARY KEY,
+        score_phrase VARCHAR(11),
+        title TEXT,
+        url TEXT,
+        platform VARCHAR(20),
+        score DECIMAL(3, 1),
+        genre TEXT,
+        editors_choice BOOLEAN,
+        release_date DATE
+   )
+""")
+
+from datetime import date
+import csv
+
+with open('ign.csv','r') as f:
+    next(f)
+    reader = csv.reader(f)
+    
+    for i in reader:
+        insertMe = i[:8]
+        insertMe.append(date(int(i[8]), int(i[9]), int(i[10])))
+        cur.execute('INSERT INTO ign_reviews VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)', insertMe)
+       
+    
+conn.commit()
+                        
